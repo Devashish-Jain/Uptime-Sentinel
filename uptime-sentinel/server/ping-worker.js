@@ -21,7 +21,9 @@ class PingWorker {
     try {
       console.log('🔧 Initializing Puppeteer browser...');
       
-      this.browser = await puppeteer.launch({
+      // Configure Puppeteer for production deployment
+      const isProduction = process.env.NODE_ENV === 'production';
+      const puppeteerOptions = {
         headless: 'new', // Use new headless mode
         args: [
           '--no-sandbox',
@@ -42,7 +44,14 @@ class PingWorker {
           height: 720
         },
         ignoreDefaultArgs: ['--disable-extensions']
-      });
+      };
+      
+      // Add production-specific options
+      if (isProduction && process.env.PUPPETEER_EXECUTABLE_PATH) {
+        puppeteerOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+      }
+      
+      this.browser = await puppeteer.launch(puppeteerOptions);
       
       // Test the browser
       const version = await this.browser.version();

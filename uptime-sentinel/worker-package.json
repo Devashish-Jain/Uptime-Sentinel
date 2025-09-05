@@ -1,0 +1,39 @@
+{
+  "name": "uptime-sentinel-worker",
+  "version": "1.0.0",
+  "description": "Uptime Sentinel Ping Worker Service - Background service for monitoring website uptime",
+  "main": "ping-worker.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node ping-worker.js",
+    "worker": "node ping-worker.js",
+    "dev": "nodemon ping-worker.js"
+  },
+  "keywords": [
+    "uptime",
+    "monitoring",
+    "worker",
+    "background-service",
+    "puppeteer",
+    "website",
+    "ping",
+    "health-check"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "mongoose": "^8.18.0",
+    "node-cron": "^4.2.1",
+    "nodemailer": "^7.0.6",
+    "puppeteer": "^24.19.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  }
+}

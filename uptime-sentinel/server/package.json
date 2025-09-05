@@ -6,8 +6,9 @@
   "scripts": {
     "start": "nodemon index.js",
     "worker": "node ping-worker.js",
-    "postbuild": "cd ../client && npm install && npm run build",
     "production": "node index.js",
+    "production-worker": "node ping-worker.js",
+    "postbuild": "cd ../client && npm install && npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

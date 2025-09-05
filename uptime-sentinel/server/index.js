@@ -27,13 +27,17 @@ const corsOptions = {
     
     const allowedOrigins = [
       process.env.CLIENT_URL_DEV || 'http://localhost:5173',
-      'http://localhost:5174', // Alternative Vite dev port
-      process.env.CLIENT_URL_PROD || 'https://uptime-sentinel.onrender.com'
-    ];
+      process.env.CLIENT_URL_DEV_ALT || 'http://localhost:5174',
+      process.env.CLIENT_URL_PROD || 'https://uptime-sentinel-frontend.onrender.com',
+      process.env.CLIENT_URL_CUSTOM, // For custom domains
+      process.env.CLIENT_URL_STAGING // For staging environments
+    ].filter(Boolean); // Remove undefined values
 
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
+      console.log('🚫 CORS blocked origin:', origin);
+      console.log('📋 Allowed origins:', allowedOrigins);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -99,7 +103,18 @@ app.get('/api/health', (req, res) => {
     message: 'Uptime Sentinel API is running',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
-    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    version: '1.0.0',
+    uptime: process.uptime(),
+    cors: {
+      allowedOrigins: [
+        process.env.CLIENT_URL_DEV || 'http://localhost:5173',
+        process.env.CLIENT_URL_DEV_ALT || 'http://localhost:5174',
+        process.env.CLIENT_URL_PROD || 'https://uptime-sentinel-frontend.onrender.com',
+        process.env.CLIENT_URL_CUSTOM,
+        process.env.CLIENT_URL_STAGING
+      ].filter(Boolean)
+    }
   });
 });
 
