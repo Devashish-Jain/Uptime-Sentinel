@@ -1,0 +1,273 @@
+/* Main App Styles */
+.app {
+  position: relative;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.main-content {
+  position: relative;
+  z-index: 1;
+  padding-top: 80px;
+}
+
+/* Dashboard Section */
+.dashboard-section {
+  position: relative;
+  padding: 6rem 2rem 4rem 2rem;
+  background: linear-gradient(180deg, 
+    rgba(15, 23, 42, 0.9) 0%, 
+    rgba(30, 41, 59, 0.8) 50%,
+    rgba(15, 23, 42, 0.9) 100%
+  );
+}
+
+.dashboard-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.dashboard-header {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.dashboard-header h2 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dashboard-header p {
+  font-size: 1.125rem;
+  color: #94a3b8;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Error Message */
+.error-message {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  margin: 2rem auto;
+  max-width: 600px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: #fca5a5;
+}
+
+.error-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.error-text {
+  flex: 1;
+  font-weight: 500;
+}
+
+.error-dismiss {
+  background: none;
+  border: none;
+  color: #fca5a5;
+  font-size: 1.125rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.error-dismiss:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+/* Loading State */
+.loading-container {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #94a3b8;
+}
+
+.loading-spinner {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  color: #3b82f6;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #94a3b8;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.5;
+}
+
+.empty-state h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #cbd5e1;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+  font-size: 1rem;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/* Website Grid */
+.website-list-section {
+  margin-top: 3rem;
+}
+
+.website-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+/* Footer */
+.app-footer {
+  background: rgba(15, 23, 42, 0.9);
+  border-top: 1px solid rgba(226, 232, 240, 0.1);
+  padding: 2rem 0;
+  margin-top: 4rem;
+}
+
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.footer-icon {
+  font-size: 1.5rem;
+}
+
+.footer-name {
+  font-size: 1.125rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.footer-text p {
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+/* Background Elements */
+.app-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.bg-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: rgba(59, 130, 246, 0.2);
+  border-radius: 50%;
+  filter: blur(1px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .main-content {
+    padding-top: 70px;
+  }
+
+  .dashboard-section {
+    padding: 3rem 1rem;
+  }
+
+  .dashboard-header {
+    margin-bottom: 2rem;
+  }
+
+  .dashboard-header p {
+    font-size: 1rem;
+  }
+
+  .website-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .footer-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+
+  .error-message {
+    margin: 1rem;
+    padding: 0.875rem 1rem;
+  }
+
+  .empty-state {
+    padding: 2rem 1rem;
+  }
+
+  .empty-icon {
+    font-size: 3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-section {
+    padding: 2rem 0.5rem;
+  }
+
+  .website-grid {
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .loading-container {
+    padding: 2rem 1rem;
+  }
+
+  .empty-state {
+    padding: 1.5rem 1rem;
+  }
+
+  .empty-state h3 {
+    font-size: 1.25rem;
+  }
+}

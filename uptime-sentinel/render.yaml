@@ -1,0 +1,49 @@
+# render.yaml
+# Blueprint for deploying Project Uptime Sentinel on Render
+# This file defines two services: a web service for the API and a background worker for the ping tasks
+
+services:
+  # ------------------
+  # Web Service (API + Frontend)
+  # ------------------
+  - type: web
+    name: uptime-sentinel-api
+    env: node
+    plan: free # Or 'starter' for better performance
+    region: oregon # Specify your preferred region
+    buildCommand: "npm install && npm run postbuild"
+    startCommand: "node index.js"
+    rootDir: ./server
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        fromSecret: MONGO_CONNECTION_STRING # Create this secret in Render dashboard
+      - key: CLIENT_URL_PROD
+        fromService:
+          type: web
+          name: uptime-sentinel-api
+          property: url
+      - key: CLIENT_URL_DEV
+        value: http://localhost:5173
+      - key: PORT
+        value: 10000
+
+  # ------------------
+  # Background Worker (Ping Service)
+  # ------------------
+  - type: worker
+    name: uptime-sentinel-worker
+    env: node
+    plan: free # Or 'starter'
+    region: oregon
+    buildCommand: "npm install"
+    startCommand: "node ping-worker.js"
+    rootDir: ./server
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        fromSecret: MONGO_CONNECTION_STRING
+      - key: PING_FREQUENCY_CRON
+        value: "*/5 * * * *" # Every 5 minutes
