@@ -1,7 +1,30 @@
 import { motion } from 'framer-motion';
+import { useAuth } from '../contexts/AuthContext';
 import './HeroSection.css';
 
-const HeroSection = () => {
+const HeroSection = ({ stats = null }) => {
+  const { isAuthenticated } = useAuth();
+
+  // Show minimal hero for authenticated users
+  if (isAuthenticated) {
+    return (
+      <section className="hero-section authenticated">
+        <div className="hero-content">
+          <motion.div
+            className="hero-text minimal"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <h1>Dashboard Overview</h1>
+            <p>Monitor and manage your websites in real-time</p>
+          </motion.div>
+        </div>
+      </section>
+    );
+  }
+
+  // Show full hero for unauthenticated users
   return (
     <section className="hero-section">
       {/* Background gradient */}

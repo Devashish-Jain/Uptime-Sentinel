@@ -4,33 +4,39 @@ import PingHistoryModal from './PingHistoryModal';
 import { apiService } from '../services/api';
 import './WebsiteCard.css';
 
-const WebsiteCard = ({ website, onDelete, onWebsiteUpdate }) => {
+const WebsiteCard = ({ website, onDelete, onUpdate, onPause, onResume }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showPingHistory, setShowPingHistory] = useState(false);
   const [isPausing, setIsPausing] = useState(false);
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case 'UP':
+    switch (status?.toLowerCase()) {
+      case 'up':
         return '#10b981';
-      case 'DOWN':
+      case 'down':
         return '#ef4444';
-      case 'PENDING':
+      case 'warning':
+      case 'pending':
         return '#f59e0b';
+      case 'paused':
+        return '#6b7280';
       default:
         return '#6b7280';
     }
   };
 
   const getStatusIcon = (status) => {
-    switch (status) {
-      case 'UP':
+    switch (status?.toLowerCase()) {
+      case 'up':
         return '✅';
-      case 'DOWN':
+      case 'down':
         return '❌';
-      case 'PENDING':
+      case 'warning':
+      case 'pending':
         return '⏳';
+      case 'paused':
+        return '⏸️';
       default:
         return '❓';
     }
@@ -91,16 +97,14 @@ const WebsiteCard = ({ website, onDelete, onWebsiteUpdate }) => {
     setIsPausing(true);
     
     try {
-      let response;
-      if (website.isTemporarilyStopped) {
-        response = await apiService.resumeWebsite(website._id);
+      if (website.status === 'paused' || website.isTemporarilyStopped) {
+        if (onResume) {
+          await onResume(website._id);
+        }
       } else {
-        response = await apiService.pauseWebsite(website._id);
-      }
-      
-      // Update the parent component with the new website data
-      if (onWebsiteUpdate) {
-        onWebsiteUpdate(response.data);
+        if (onPause) {
+          await onPause(website._id);
+        }
       }
     } catch (error) {
       console.error('Failed to toggle pause:', error);
@@ -128,12 +132,12 @@ const WebsiteCard = ({ website, onDelete, onWebsiteUpdate }) => {
           className="status-indicator"
           style={{ backgroundColor: getStatusColor(website.status) }}
           animate={{
-            scale: website.status === 'PENDING' ? [1, 1.2, 1] : 1,
-            opacity: website.status === 'PENDING' ? [0.7, 1, 0.7] : 1,
+            scale: (website.status?.toLowerCase() === 'pending' || website.status?.toLowerCase() === 'warning') ? [1, 1.2, 1] : 1,
+            opacity: (website.status?.toLowerCase() === 'pending' || website.status?.toLowerCase() === 'warning') ? [0.7, 1, 0.7] : 1,
           }}
           transition={{
             duration: 2,
-            repeat: website.status === 'PENDING' ? Infinity : 0,
+            repeat: (website.status?.toLowerCase() === 'pending' || website.status?.toLowerCase() === 'warning') ? Infinity : 0,
             ease: "easeInOut"
           }}
         >
@@ -148,14 +152,14 @@ const WebsiteCard = ({ website, onDelete, onWebsiteUpdate }) => {
         <div className="card-actions">
           {/* Pause/Resume Button */}
           <motion.button
-            className={`pause-button ${website.isTemporarilyStopped ? 'resumed' : 'paused'}`}
+            className={`pause-button ${(website.status === 'paused' || website.isTemporarilyStopped) ? 'resumed' : 'paused'}`}
             onClick={handleTogglePause}
             disabled={isPausing}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            title={website.isTemporarilyStopped ? 'Resume monitoring' : 'Pause monitoring'}
+            title={(website.status === 'paused' || website.isTemporarilyStopped) ? 'Resume monitoring' : 'Pause monitoring'}
           >
-            {isPausing ? '⏳' : (website.isTemporarilyStopped ? '▶️' : '⏸️')}
+            {isPausing ? '⏳' : ((website.status === 'paused' || website.isTemporarilyStopped) ? '▶️' : '⏸️')}
           </motion.button>
           
           {!showDeleteConfirm ? (
@@ -202,9 +206,9 @@ const WebsiteCard = ({ website, onDelete, onWebsiteUpdate }) => {
         <div className="status-details">
           <div className="detail-item">
             <span className="detail-label">Status</span>
-            <span className={`detail-value status-${website.status.toLowerCase()}`}>
-              {website.status}
-              {website.isTemporarilyStopped && (
+            <span className={`detail-value status-${website.status?.toLowerCase()}`}>
+              {website.status?.toUpperCase()}
+              {(website.status === 'paused' || website.isTemporarilyStopped) && (
                 <span className="paused-badge">• PAUSED</span>
               )}
             </span>
@@ -287,7 +291,7 @@ const WebsiteCard = ({ website, onDelete, onWebsiteUpdate }) => {
         website={website}
         isOpen={showPingHistory}
         onClose={() => setShowPingHistory(false)}
-        onWebsiteUpdate={onWebsiteUpdate}
+onWebsiteUpdate={onUpdate}
       />
     </>
   );

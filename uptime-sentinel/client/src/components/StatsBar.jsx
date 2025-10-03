@@ -1,62 +1,61 @@
 import { motion } from 'framer-motion';
 import CountUp from 'react-countup';
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import './StatsBar.css';
 
-const StatsBar = ({ websites = [] }) => {
-  const [stats, setStats] = useState({
-    totalWebsites: 0,
-    totalPingsToday: 0,
-    averageUptime: 0,
-    averageResponseTime: 0
-  });
+const StatsBar = ({ websites = [], stats: providedStats, refreshing = false }) => {
+  // Use provided stats if available, otherwise calculate from websites
+  const stats = useMemo(() => {
+    if (providedStats) {
+      return {
+        totalWebsites: providedStats.totalWebsites || 0,
+        totalPingsToday: providedStats.totalPingsToday || 0,
+        averageUptime: Math.round((providedStats.averageUptime || 0) * 10) / 10,
+        averageResponseTime: Math.round(providedStats.averageResponseTime || 0)
+      };
+    }
 
-  useEffect(() => {
-    calculateStats();
-  }, [websites]);
-
-  const calculateStats = () => {
+    // Fallback calculation if no stats provided
     if (!websites || websites.length === 0) {
-      setStats({
+      return {
         totalWebsites: 0,
         totalPingsToday: 0,
         averageUptime: 0,
         averageResponseTime: 0
-      });
-      return;
+      };
     }
 
     const totalWebsites = websites.length;
     
-    // Calculate total pings today (mock data for demonstration)
-    const totalPingsToday = websites.reduce((total, website) => {
-      const today = new Date();
-      const todayPings = website.pingHistory?.filter(ping => {
-        const pingDate = new Date(ping.timestamp);
-        return pingDate.toDateString() === today.toDateString();
-      }) || [];
-      return total + todayPings.length;
-    }, 0);
+    // Calculate total pings today
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const totalPingsToday = websites.filter(website => 
+      website.lastChecked && new Date(website.lastChecked) >= todayStart
+    ).length;
 
     // Calculate average uptime percentage
-    const uptimes = websites.map(website => website.uptimePercentage || 0);
-    const averageUptime = uptimes.length > 0 
-      ? uptimes.reduce((sum, uptime) => sum + uptime, 0) / uptimes.length 
+    const validUptimes = websites.filter(w => w.totalChecks > 0);
+    const averageUptime = validUptimes.length > 0 
+      ? validUptimes.reduce((sum, website) => {
+          const uptime = ((website.totalChecks - website.totalFailures) / website.totalChecks) * 100;
+          return sum + uptime;
+        }, 0) / validUptimes.length
       : 0;
 
     // Calculate average response time
-    const responseTimes = websites.map(website => website.averageResponseTime || 0);
-    const averageResponseTime = responseTimes.length > 0 
-      ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length 
+    const validResponseTimes = websites.filter(w => w.averageResponseTime > 0);
+    const averageResponseTime = validResponseTimes.length > 0 
+      ? validResponseTimes.reduce((sum, website) => sum + website.averageResponseTime, 0) / validResponseTimes.length
       : 0;
 
-    setStats({
+    return {
       totalWebsites,
       totalPingsToday,
       averageUptime: Math.round(averageUptime * 10) / 10,
       averageResponseTime: Math.round(averageResponseTime)
-    });
-  };
+    };
+  }, [websites, providedStats]);
 
   const statItems = [
     {
@@ -96,13 +95,24 @@ const StatsBar = ({ websites = [] }) => {
 
   return (
     <motion.section 
-      className="stats-bar"
+      className={`stats-bar ${refreshing ? 'refreshing' : ''}`}
       initial={{ opacity: 0, y: 50 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-100px" }}
       transition={{ duration: 0.6 }}
     >
       <div className="stats-container">
+        {refreshing && (
+          <div className="refresh-indicator">
+            <motion.div
+              className="refresh-spinner"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+            >
+              ↻
+            </motion.div>
+          </div>
+        )}
         {statItems.map((stat, index) => (
           <motion.div
             key={stat.id}
@@ -135,14 +145,14 @@ const StatsBar = ({ websites = [] }) => {
               <div className="stat-number">
                 <CountUp
                   start={0}
-                  end={stat.value || 0}
+                  end={isNaN(stat.value) || stat.value === null || stat.value === undefined ? 0 : stat.value}
                   duration={2.5}
                   enableScrollSpy={true}
                   scrollSpyOnce={true}
                   decimals={stat.decimals || 0}
-                  suffix={stat.suffix}
+                  suffix={stat.suffix || ''}
                   preserveValue={true}
-                  redraw={true}
+                  redraw={false}
                 />
               </div>
               <div className="stat-label">{stat.label}</div>

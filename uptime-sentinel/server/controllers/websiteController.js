@@ -1,13 +1,52 @@
 const Website = require('../models/Website');
 const immediatePingService = require('../services/immediatePingService');
 
-// @desc    Get all websites
+// @desc    Get user's websites
 // @route   GET /api/websites
-// @access  Public
+// @access  Private
 const getWebsites = async (req, res) => {
   try {
-    // Use the static method to get websites with statistics
-    const websites = await Website.getWebsitesWithStats();
+    // Get websites for the authenticated user
+    const websites = await Website.aggregate([
+      {
+        $match: { user: req.user._id }
+      },
+      {
+        $addFields: {
+          recentPings: { $slice: ['$pingHistory', -10] },
+          averageResponseTime: {
+            $avg: '$pingHistory.duration'
+          },
+          uptimePercentage: {
+            $cond: {
+              if: { $eq: [{ $size: '$pingHistory' }, 0] },
+              then: 0,
+              else: {
+                $multiply: [
+                  {
+                    $divide: [
+                      {
+                        $size: {
+                          $filter: {
+                            input: '$pingHistory',
+                            cond: { $and: [{ $gte: ['$$this.statusCode', 200] }, { $lt: ['$$this.statusCode', 400] }] }
+                          }
+                        }
+                      },
+                      { $size: '$pingHistory' }
+                    ]
+                  },
+                  100
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        $sort: { createdAt: -1 }
+      }
+    ]);
     
     res.status(200).json({
       success: true,
@@ -15,7 +54,7 @@ const getWebsites = async (req, res) => {
       data: websites
     });
   } catch (error) {
-    console.error('Error fetching websites:', error);
+    console.error('Error fetching user websites:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch websites',
@@ -26,18 +65,18 @@ const getWebsites = async (req, res) => {
 
 // @desc    Add a new website
 // @route   POST /api/websites
-// @access  Public
+// @access  Private
 const addWebsite = async (req, res) => {
   try {
     console.log('📝 Request body:', req.body);
     const { url, name, email } = req.body;
 
     // Validate required fields
-    if (!url || !name || !email) {
-      console.log('⚠️ Missing required fields:', { url: !!url, name: !!name, email: !!email });
+    if (!url || !name) {
+      console.log('⚠️ Missing required fields:', { url: !!url, name: !!name });
       return res.status(400).json({
         success: false,
-        message: 'Please provide URL, name, and email'
+        message: 'Please provide URL and name'
       });
     }
 
@@ -47,21 +86,25 @@ const addWebsite = async (req, res) => {
       formattedUrl = 'https://' + formattedUrl;
     }
 
-    // Check if website already exists
-    const existingWebsite = await Website.findOne({ url: formattedUrl });
+    // Check if user already has this website
+    const existingWebsite = await Website.findOne({ 
+      user: req.user._id, 
+      url: formattedUrl 
+    });
     if (existingWebsite) {
       return res.status(400).json({
         success: false,
-        message: 'Website with this URL already exists'
+        message: 'You already have this website in your monitoring list'
       });
     }
 
     // Create new website
-    console.log('📎 Creating website with data:', { url: formattedUrl, name: name.trim(), email: email.trim() });
+    console.log('📎 Creating website for user:', req.user._id, { url: formattedUrl, name: name.trim() });
     const website = new Website({
+      user: req.user._id,
       url: formattedUrl,
       name: name.trim(),
-      email: email.trim()
+      email: email ? email.trim() : req.user.email // Use user's email if not provided
     });
 
     const savedWebsite = await website.save();
@@ -114,7 +157,7 @@ const addWebsite = async (req, res) => {
 
 // @desc    Delete a website
 // @route   DELETE /api/websites/:id
-// @access  Public
+// @access  Private
 const deleteWebsite = async (req, res) => {
   try {
     const { id } = req.params;
@@ -127,12 +170,12 @@ const deleteWebsite = async (req, res) => {
       });
     }
 
-    const website = await Website.findById(id);
+    const website = await Website.findOne({ _id: id, user: req.user._id });
 
     if (!website) {
       return res.status(404).json({
         success: false,
-        message: 'Website not found'
+        message: 'Website not found or you do not have permission to delete it'
       });
     }
 
@@ -154,7 +197,7 @@ const deleteWebsite = async (req, res) => {
 
 // @desc    Get website by ID
 // @route   GET /api/websites/:id
-// @access  Public
+// @access  Private
 const getWebsiteById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -167,12 +210,12 @@ const getWebsiteById = async (req, res) => {
       });
     }
 
-    const website = await Website.findById(id);
+    const website = await Website.findOne({ _id: id, user: req.user._id });
 
     if (!website) {
       return res.status(404).json({
         success: false,
-        message: 'Website not found'
+        message: 'Website not found or you do not have permission to access it'
       });
     }
 

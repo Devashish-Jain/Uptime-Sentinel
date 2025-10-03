@@ -321,6 +321,261 @@ class EmailService {
     `;
   }
 
+  async sendVerificationEmail(user, verificationToken) {
+    if (!this.transporter) {
+      console.error('❌ Email transporter not initialized');
+      return false;
+    }
+
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.warn('⚠️ Email credentials not configured, skipping verification email');
+      return false;
+    }
+
+    try {
+      const subject = 'Verify Your Email - Uptime Sentinel';
+      const html = this.generateVerificationEmailTemplate(user, verificationToken);
+
+      const mailOptions = {
+        from: {
+          name: 'Uptime Sentinel',
+          address: process.env.EMAIL_USER
+        },
+        to: user.email,
+        subject: subject,
+        html: html
+      };
+
+      const result = await this.transporter.sendMail(mailOptions);
+      console.log(`📧 Verification email sent to ${user.email}`);
+      return true;
+    } catch (error) {
+      console.error(`❌ Failed to send verification email to ${user.email}:`, error.message);
+      return false;
+    }
+  }
+
+  generateVerificationEmailTemplate(user, verificationToken) {
+    return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Verify Your Email - Uptime Sentinel</title>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                background-color: #0f172a;
+                color: #e2e8f0;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                line-height: 1.6;
+            }
+            .email-container {
+                max-width: 600px;
+                width: 100%;
+                margin: 0 auto;
+                background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%);
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            }
+            
+            @media only screen and (max-width: 600px) {
+                .email-container {
+                    max-width: 100%;
+                    margin: 0;
+                    border-radius: 0;
+                }
+                
+                .email-header {
+                    padding: 1.5rem 1rem;
+                }
+                
+                .email-body {
+                    padding: 1.5rem 1rem;
+                }
+                
+                .verification-section {
+                    padding: 1.5rem 1rem;
+                    margin: 1.5rem 0;
+                }
+                
+                .verification-code {
+                    font-size: 2rem;
+                    letter-spacing: 0.3rem;
+                    padding: 0.8rem 1.5rem;
+                }
+                
+                .features {
+                    flex-direction: column;
+                    gap: 1rem;
+                }
+                
+                .feature {
+                    min-width: auto;
+                    margin: 0;
+                }
+                
+                .footer {
+                    padding: 1rem;
+                }
+            }
+            .email-header {
+                background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+                padding: 2rem;
+                text-align: center;
+            }
+            .logo {
+                font-size: 2rem;
+                margin-bottom: 0.5rem;
+            }
+            .brand-name {
+                font-size: 1.5rem;
+                font-weight: bold;
+                margin: 0;
+                color: white;
+            }
+            .email-body {
+                padding: 2rem;
+            }
+            .greeting {
+                font-size: 1.25rem;
+                margin-bottom: 1rem;
+                color: #cbd5e1;
+            }
+            .message {
+                margin-bottom: 2rem;
+                color: #94a3b8;
+                line-height: 1.6;
+            }
+            .verification-section {
+                background: rgba(59, 130, 246, 0.1);
+                border: 1px solid rgba(59, 130, 246, 0.3);
+                border-radius: 12px;
+                padding: 2rem;
+                text-align: center;
+                margin: 2rem 0;
+            }
+            .verification-code {
+                font-size: 2.5rem;
+                font-weight: bold;
+                letter-spacing: 0.5rem;
+                color: #3b82f6;
+                font-family: 'Courier New', monospace;
+                background: rgba(59, 130, 246, 0.2);
+                padding: 1rem 2rem;
+                border-radius: 8px;
+                display: inline-block;
+                margin: 1rem 0;
+                border: 2px solid rgba(59, 130, 246, 0.4);
+            }
+            .verification-text {
+                color: #cbd5e1;
+                margin-bottom: 0.5rem;
+            }
+            .expiry-text {
+                color: #f59e0b;
+                font-size: 0.9rem;
+                margin-top: 1rem;
+            }
+            .footer {
+                background: rgba(15, 23, 42, 0.8);
+                padding: 1.5rem 2rem;
+                text-align: center;
+                border-top: 1px solid rgba(59, 130, 246, 0.2);
+            }
+            .footer-text {
+                color: #64748b;
+                font-size: 0.9rem;
+                margin: 0;
+            }
+            .features {
+                display: flex;
+                justify-content: space-around;
+                margin: 2rem 0;
+                flex-wrap: wrap;
+            }
+            .feature {
+                text-align: center;
+                flex: 1;
+                min-width: 120px;
+                margin: 0.5rem;
+            }
+            .feature-icon {
+                font-size: 2rem;
+                margin-bottom: 0.5rem;
+            }
+            .feature-text {
+                font-size: 0.9rem;
+                color: #94a3b8;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="email-container">
+            <div class="email-header">
+                <div class="logo">📡</div>
+                <h1 class="brand-name">Uptime Sentinel</h1>
+            </div>
+            
+            <div class="email-body">
+                <div class="greeting">
+                    Welcome, ${user.firstName}! 👋
+                </div>
+                
+                <div class="message">
+                    Thank you for joining Uptime Sentinel! We're excited to help you monitor your websites with confidence.
+                    <br><br>
+                    To complete your registration and start monitoring your websites, please verify your email address by entering the verification code below:
+                </div>
+                
+                <div class="verification-section">
+                    <div class="verification-text">Your verification code is:</div>
+                    <div class="verification-code">${verificationToken}</div>
+                    <div class="expiry-text">⏰ This code expires in 5 minutes</div>
+                </div>
+                
+                <div class="features">
+                    <div class="feature">
+                        <div class="feature-icon">🔍</div>
+                        <div class="feature-text">Real-time Monitoring</div>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">📊</div>
+                        <div class="feature-text">Detailed Analytics</div>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">⚡</div>
+                        <div class="feature-text">Fast & Reliable</div>
+                    </div>
+                </div>
+                
+                <div class="message">
+                    Once verified, you'll be able to:
+                    <ul style="color: #94a3b8; margin: 1rem 0;">
+                        <li>Add unlimited websites to monitor</li>
+                        <li>Get instant notifications for downtime</li>
+                        <li>View detailed uptime statistics</li>
+                        <li>Access historical performance data</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer">
+                <p class="footer-text">
+                    If you didn't create this account, please ignore this email.
+                    <br>
+                    © ${new Date().getFullYear()} Uptime Sentinel. Built with ❤️ for reliable monitoring.
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+  }
+
   async testConnection() {
     if (!this.transporter) {
       return false;

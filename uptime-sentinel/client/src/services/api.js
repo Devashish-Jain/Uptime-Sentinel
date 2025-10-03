@@ -7,6 +7,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Enable sending cookies with requests
 });
 
 // Request interceptor for debugging in development
@@ -154,6 +155,81 @@ export const apiService = {
   async resumeWebsite(id) {
     try {
       const response = await api.put(`/websites/${id}/resume`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Authentication methods
+  
+  // Sign up a new user
+  async signup(userData) {
+    try {
+      const response = await api.post('/auth/signup', userData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Login user
+  async login(email, password) {
+    try {
+      const response = await api.post('/auth/login', { email, password });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Verify email with verification code
+  async verifyEmail(email, verificationCode) {
+    try {
+      const response = await api.post('/auth/verify-email', {
+        email,
+        verificationCode
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Resend verification email
+  async resendVerificationEmail(email) {
+    try {
+      const response = await api.post('/auth/resend-verification', { email });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Logout user
+  async logout() {
+    try {
+      const response = await api.post('/auth/logout');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Get current user
+  async getCurrentUser() {
+    try {
+      const response = await api.get('/auth/me');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Check authentication status
+  async checkAuthStatus() {
+    try {
+      const response = await api.get('/auth/status');
       return response.data;
     } catch (error) {
       throw error;

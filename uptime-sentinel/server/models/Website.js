@@ -30,10 +30,14 @@ const pingHistorySchema = new Schema({
 
 // Main Website schema
 const websiteSchema = new Schema({
+  user: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: [true, 'User is required']
+  },
   url: {
     type: String,
     required: [true, 'URL is required'],
-    unique: true,
     trim: true,
     validate: {
       validator: urlValidator,
@@ -101,6 +105,9 @@ const websiteSchema = new Schema({
 }, {
   timestamps: true // Adds createdAt and updatedAt fields
 });
+
+// Compound index to ensure a user can't add the same URL twice
+websiteSchema.index({ user: 1, url: 1 }, { unique: true });
 
 // Middleware to manage ping history cap
 websiteSchema.pre('save', function(next) {

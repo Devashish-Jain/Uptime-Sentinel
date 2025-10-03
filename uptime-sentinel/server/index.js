@@ -1,16 +1,19 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const path = require('path');
 require('dotenv').config();
 
 // Import routes
 const websiteRoutes = require('./routes/websites');
 const pingRoutes = require('./routes/ping');
+const authRoutes = require('./routes/auth');
 
 // Import services
 const dbInitService = require('./services/dbInitService');
 const emailService = require('./services/emailService');
+const websocketManager = require('./websocket');
 
 // Initialize Express app
 const app = express();
@@ -18,6 +21,7 @@ const app = express();
 // Middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cookieParser());
 
 // CORS configuration - dynamic based on environment
 const corsOptions = {
@@ -93,6 +97,7 @@ mongoose.connection.on('reconnected', () => {
 });
 
 // API Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/websites', websiteRoutes);
 app.use('/api/ping', pingRoutes);
 
@@ -176,14 +181,19 @@ const startServer = async () => {
     await connectDB();
     
     // Start the server
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log('🚀 =================================');
       console.log(`🚀   Server running on port ${PORT}`);
       console.log(`🚀   Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`🚀   API: http://localhost:${PORT}/api`);
+      console.log(`🚀   WebSocket: ws://localhost:${PORT}/ws`);
       console.log(`🚀   Health: http://localhost:${PORT}/api/health`);
       console.log('🚀 =================================');
     });
+    
+    // Initialize WebSocket server
+    websocketManager.initialize(server);
+    
   } catch (error) {
     console.error('❌ Failed to start server:', error.message);
     process.exit(1);
